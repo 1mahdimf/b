@@ -81,27 +81,28 @@ class OnlineplusApi {
   }
 
   setHeaders(value) {
+    console.log(value);
     this.headers = { ...this.headers, ...value };
   }
 
   prepareSendOrderOption() {
     let bodyData = {
-      isin: this.isin,
-      orderCount: this.quantity,
-      orderPrice: this.price,
       IsSymbolCautionAgreement: false,
       CautionAgreementSelected: false,
       IsSymbolSepahAgreement: false,
       SepahAgreementSelected: false,
-      minimumQuantity: "",
+      orderCount: this.quantity,
+      orderPrice: this.price,
+      FinancialProviderId: 1, // TBRFinancialDataProvider: 1
+      minimumQuantity: 0,
       maxShow: 0,
       orderId: 0,
+      isin: this.isin,
+      orderSide: this.orderType === "buy" ? 65 : "86", // buy: 65, sell: 86
+      orderValidity: 74, // Day: 74, Week: 7, Month: 30, ValidToDate: 68, ExecuteAndRemove: 69, ValidToCancellation: 70
       orderValiditydate: null,
       shortSellIsEnabled: false,
       shortSellIncentivePercent: 0,
-      FinancialProviderId: 1, // TBRFinancialDataProvider: 1
-      orderValidity: 74, // Day: 74, Week: 7, Month: 30, ValidToDate: 68, ExecuteAndRemove: 69, ValidToCancellation: 70
-      orderSide: this.orderType === "buy" ? 65 : "86", // buy: 65, sell: 86
     };
 
     this.sendOrderOptions = {

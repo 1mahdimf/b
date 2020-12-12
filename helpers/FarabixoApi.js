@@ -172,31 +172,87 @@ class FarabixoApi {
             return resolve(data);
           }
 
+          let details = [];
+          try {
+            details = await this.getOrderListDetailsApi();
+          } catch (e) {
+            details = [];
+          }
+
           let result = [];
           for (let i = 0; i < data.length; i++) {
             const item = data[i];
+            const orderId = item[2];
 
             const [y, m, d] = item[7].split("/");
             const jDate = `${y}-${twoDigit(m)}-${twoDigit(d)}`;
 
-            const [hour, min] = item[13].split(":");
-            const time = `${twoDigit(hour)}:${twoDigit(min)}:00`;
-
             const date = moment(jDate, "jYYYY-jMM-jDD").format("YYYY-MM-DD");
 
+            let time = "";
+            const found = details.find((d) => d.orderId === orderId);
+            if (found) {
+              time = found.time;
+            } else {
+              const [hour, min] = item[13].split(":");
+              time = `${twoDigit(hour)}:${twoDigit(min)}:00`;
+            }
+
             result.push({
+              orderId,
               isin: item[17],
               isinName: item[5],
               createdAt: `${date} ${time}`,
               date,
               jDate,
               price: item[8],
-              orderId: 1,
               side: item[9] === "خرید" ? "buy" : "sell",
               qunatity: item[12],
               status: `${item[10]} - ${item[11]}`,
               statusType: item[11] === "Confirmed" ? "done" : "pending",
               position: item[1],
+            });
+          }
+
+          resolve(result);
+        } else {
+          reject({
+            url: options.url,
+            error,
+            statusCode: res ? res.statusCode : 0,
+          });
+        }
+      });
+    });
+  }
+
+  getOrderListDetailsApi() {
+    return new Promise((resolve, reject) => {
+      const options = {
+        url: `${
+          this.domain
+        }/Tse/Report/GetSearchedOrderInfos?fromDate=${moment().format(
+          "YYYY-MM-DD"
+        )}T00:00:00&toDate=${moment().format("YYYY-MM-DD")}T00:00:00`,
+        method: "GET",
+        headers: this.headers,
+        timeout: 10000, // ms
+      };
+
+      request(options, async (error, res, body) => {
+        if (!error && res.statusCode == 200) {
+          const data = JSON.parse(body).data;
+          if (data.length === 0) {
+            return resolve(data);
+          }
+
+          let result = [];
+          for (let i = 0; i < data.length; i++) {
+            const item = data[i];
+
+            result.push({
+              orderId: item[1],
+              time: item[12],
             });
           }
 
