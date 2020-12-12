@@ -123,11 +123,13 @@ const getOnlineplusToken = (tab) => {
       (data) => {
         const response = data[0];
 
-        const token = response.match(/tokenManger.saveToken\('(.*?)'\);/)[1];
+        const authToken = response.match(
+          /tokenManger.saveToken\('(.*?)'\);/
+        )[1];
         const customerTitle = response.match(/CustomerName = '(.*?)';/)[1];
         const userName = response.match(/UserName ='(.*?)';/)[1];
 
-        return resolve({ token, customerTitle, userName });
+        return resolve({ authToken, customerTitle, userName });
       }
     );
   });

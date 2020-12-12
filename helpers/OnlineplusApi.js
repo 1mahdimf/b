@@ -105,7 +105,7 @@ class OnlineplusApi {
     };
 
     this.sendOrderOptions = {
-      url: `${this.brokerDomain}/Customer/SendOrder`,
+      url: `${this.brokerDomain}/Web/V1/Order/Post`,
       method: "POST",
       headers: this.headers,
       body: JSON.stringify(bodyData),
