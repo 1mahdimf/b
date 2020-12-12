@@ -194,7 +194,7 @@ class OnlineplusApi {
   getOrderListApi() {
     return new Promise((resolve, reject) => {
       const options = {
-        url: `${this.brokerDomain}/Customer/GetCustomerOpenOrders`,
+        url: `${this.brokerDomain}/Web/V1/Order/GetOpenOrder/OpenOrder`,
         method: "GET",
         headers: this.headers,
         timeout: 10000, // ms
@@ -231,19 +231,20 @@ class OnlineplusApi {
                   ? "done"
                   : "pending",
               position: item.HostOrderId,
+              volumetricPosition: 0,
             };
 
-            try {
-              obj.volumetricPosition = await this.getVolumetricPositionApi(
-                obj.isin,
-                obj.position,
-                obj.price,
-                date,
-                obj.side
-              );
-            } catch (e) {
-              obj.volumetricPosition = 0;
-            }
+            // try {
+            //   obj.volumetricPosition = await this.getVolumetricPositionApi(
+            //     obj.isin,
+            //     obj.position,
+            //     obj.price,
+            //     date,
+            //     obj.side
+            //   );
+            // } catch (e) {
+            //   obj.volumetricPosition = 0;
+            // }
 
             result.push(obj);
           }
@@ -355,7 +356,7 @@ class OnlineplusApi {
   getPortfolio() {
     return new Promise((resolve, reject) => {
       const options = {
-        url: `${this.brokerDomain}/Customer/GetDailyCustomerStockPortfolio`,
+        url: `${this.brokerDomain}/Web/V1/DailyPortfolio/Get/DailyPortfolio`,
         method: "GET",
         headers: this.headers,
         timeout: 10000, // ms
@@ -467,7 +468,7 @@ class OnlineplusApi {
   getOrderTodayListApi() {
     return new Promise((resolve, reject) => {
       const options = {
-        url: `${this.brokerDomain}/Customer/GetCustomerTodayOrders`,
+        url: `${this.brokerDomain}/Web/V1/Order/GetTodayOrders/Customer/GetCustomerTodayOrders`,
         method: "GET",
         headers: this.headers,
         timeout: 10000, // ms
