@@ -1,0 +1,102 @@
+<div style="padding: 10px; margin: 0;">
+  <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+<script type="text/javascript">
+  let config = {
+    // The type of chart we want to create
+    type: "line",
+
+    // The data for our dataset
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "حجم خرید",
+          borderColor: "rgb(75, 192, 192)",
+          data: [],
+        },
+        {
+          label: "حجم فروش",
+          borderColor: "rgb(255, 99, 132)",
+          data: [],
+        },
+      ],
+    },
+
+    // Configuration options go here
+    options: {
+      elements: {
+        line: {
+          tension: 0,
+          fill: false,
+        },
+      },
+    },
+  };
+
+  const ctx = document.getElementById("myChart").getContext("2d");
+  const chart = new Chart(ctx, config);
+
+  const getUrlParams = () => {
+    const url = window.location.href;
+    let params = {};
+    (url + "?")
+      .split("?")[1]
+      .split("&")
+      .forEach(function (pair) {
+        pair = (pair + "=").split("=").map(decodeURIComponent);
+        if (pair[0].length) {
+          params[pair[0]] = pair[1];
+        }
+      });
+
+    return params;
+  };
+
+  const xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      const res = JSON.parse(this.responseText);
+
+      const date = new Date();
+      const time =
+        date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+
+      let dataSets = config.data.datasets;
+
+      let dataSetsBuy =
+        dataSets[0].data.length > 0
+          ? dataSets[0].data[dataSets[0].data.length - 1]
+          : 0;
+
+      let dataSetsSell =
+        dataSets[1].data.length > 0
+          ? dataSets[1].data[dataSets[1].data.length - 1]
+          : 0;
+
+      if (res.symbolqueue.Value.length > 0) {
+        dataSetsBuy = res.symbolqueue.Value[0].BestBuyQuantity;
+        dataSetsSell = res.symbolqueue.Value[0].BestSellQuantity;
+      }
+
+      config.data.labels.push(time);
+      dataSets[0].data.push(dataSetsBuy);
+      dataSets[1].data.push(dataSetsSell);
+      chart.update();
+    }
+  };
+
+  const isin = getUrlParams().isin || "IRO1OFRS0001";
+
+  setInterval(() => {
+    xhttp.open(
+      "GET",
+      `https://core.tadbirrlc.com//StockFutureInfoHandler.ashx?%7B%22Type%22:%22getLightSymbolInfoAndQueue%22,%22la%22:%22Fa%22,%22nscCode%22:%22${isin}%22%7D&jsoncallback=`,
+      true
+    );
+    xhttp.send();
+  }, 30 * 1000);
+</script>

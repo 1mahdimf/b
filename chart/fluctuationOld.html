@@ -1,0 +1,287 @@
+<div class="chartWrapper">
+  <div class="chartAreaWrapper">
+    <canvas id="queueChart" height="300" width="5000"></canvas>
+    <canvas id="volumeChart" height="300" width="5000"></canvas>
+    <canvas id="priceChart" height="300" width="5000"></canvas>
+  </div>
+</div>
+
+<style>
+  .chartWrapper {
+    position: relative;
+    padding: 10px;
+    margin: 0;
+  }
+
+  .chartWrapper > canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+  }
+
+  .chartAreaWrapper {
+    width: 5000px;
+    overflow-x: scroll;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="https://unpkg.com/jalali-moment/dist/jalali-moment.browser.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"
+></script>
+
+<script type="text/javascript">
+  const getUrlParams = () => {
+    const url = window.location.href;
+    let params = {};
+    (url + "?")
+      .split("?")[1]
+      .split("&")
+      .forEach(function (pair) {
+        pair = (pair + "=").split("=").map(decodeURIComponent);
+        if (pair[0].length) {
+          params[pair[0]] = pair[1];
+        }
+      });
+
+    return params;
+  };
+
+  const fixTime = (time) => {
+    const first = parseInt(time.charAt(0));
+
+    let hour = "00";
+    let minute = "00";
+    let second = "00";
+
+    if (first >= 8 && first <= 9) {
+      hour = ("0" + first).slice(-2);
+      minute = time.substring(1, 3);
+      second = time.substring(3, 5);
+    } else {
+      hour = time.substring(0, 2);
+      minute = time.substring(2, 4);
+      second = time.substring(4, 6);
+    }
+
+    return `${hour}:${minute}:${second}`;
+  };
+
+  let queueConfig = {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "حجم صف خرید",
+          borderColor: "rgb(0, 255, 0)",
+          pointRadius: 0,
+          data: [],
+        },
+        {
+          label: "حجم صف فروش",
+          borderColor: "rgb(255, 0, 0)",
+          pointRadius: 0,
+          data: [],
+        },
+      ],
+    },
+    options: {
+      elements: {
+        line: {
+          tension: 0,
+          fill: false,
+        },
+      },
+    },
+  };
+
+  let volumeConfig = {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "حجم معاملات",
+          backgroundColor: "rgb(75, 192, 192)",
+          stack: "Stack 0",
+          data: [],
+        },
+        {
+          label: "تعداد معاملات",
+          backgroundColor: "rgb(255, 192, 75)",
+          stack: "Stack 0",
+          data: [],
+        },
+      ],
+    },
+    options: {
+      scales: {
+        x: {
+          stacked: true,
+        },
+        y: {
+          stacked: true,
+        },
+      },
+    },
+  };
+
+  let priceConfig = {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "قیمت خرید",
+          borderColor: "rgb(75, 192, 192)",
+          pointRadius: 0,
+          data: [],
+        },
+      ],
+    },
+    options: {
+      elements: {
+        line: {
+          tension: 0,
+          fill: false,
+        },
+      },
+    },
+  };
+
+  const queueChartCtx = document.getElementById("queueChart").getContext("2d");
+  const queueChart = new Chart(queueChartCtx, queueConfig);
+
+  const priceChartCtx = document.getElementById("priceChart").getContext("2d");
+  const priceChart = new Chart(priceChartCtx, priceConfig);
+
+  const volumeChartCtx = document
+    .getElementById("volumeChart")
+    .getContext("2d");
+  const volumeChart = new Chart(volumeChartCtx, volumeConfig);
+
+  const id = getUrlParams().id || "1234";
+  const date = getUrlParams().date || "2020-06-09";
+  const byCDN = getUrlParams().cdn ? getUrlParams().cdn === "1" : false;
+
+  $.ajax({
+    url: `http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i=${id}&d=${date.replace(
+      /-/g,
+      ""
+    )}`,
+    success: function (res) {
+      /**
+       * Trade
+       */
+      const intraTradeData = res.match(/var IntraTradeData=\[\[(.*?)\]\];/m);
+      if (!intraTradeData) return alert("dont get IntraTradeData");
+
+      const intraSplit = intraTradeData[1].split("],[");
+      if (!intraSplit) return alert("error in intraSplit");
+
+      let tradeList = {};
+      intraSplit.forEach((intra) => {
+        const int = intra.split(",");
+
+        const time = int[1].replace(/'/g, "");
+        const volume = parseInt(int[2].replace(/'/g, ""), 10);
+
+        if (!tradeList[time]) tradeList[time] = { volume: 0, count: 0 };
+        tradeList[time] = {
+          volume: tradeList[time].volume + volume,
+          count: tradeList[time].count + 1,
+        };
+      });
+      if (Object.keys(tradeList).length === 0)
+        return alert("error in tradeList length is 0");
+
+      /**
+       * Queue
+       */
+      const bestLimitData = res.match(/var BestLimitData=\[(.*?)\];/m);
+      if ((bestLimitData && !bestLimitData[1]) || !bestLimitData)
+        return alert("dont get bestLimitData");
+
+      let queueList = [];
+
+      bestLimitData[1].split("],").forEach((it) => {
+        const d = it.split(",");
+        if (d.length === 0) return;
+        if (!d[1]) return;
+        const pos = parseInt(d[1].replace(/'/g, ""));
+        if (pos !== 1) return;
+
+        const time = d[0].replace("[", "");
+        const timeFixed = fixTime(time);
+
+        if (queueList.find((q) => q.time === timeFixed)) return;
+
+        const timeMoment = moment(timeFixed, "HH:mm:ss");
+
+        if (
+          !timeMoment.isBetween(
+            moment("08:29:00", "HH:mm:ss"),
+            moment("12:31:00", "HH:mm:ss")
+          )
+        )
+          return;
+
+        const tradeData = tradeList[timeFixed];
+
+        queueList.push({
+          time: timeFixed,
+
+          noBuy: parseInt(d[2].replace(/'/g, "")),
+          volumeBuy: parseInt(d[3].replace(/'/g, "")),
+          priceBuy: parseInt(d[4].replace(/'/g, "")),
+          priceSell: parseInt(d[5].replace(/'/g, "")),
+          volumeSell: parseInt(d[6].replace(/'/g, "")),
+          noSell: parseInt(d[7].replace(/'/g, "")),
+
+          volumeTrade: tradeData ? tradeData.volume : 0,
+          countTrade: tradeData ? tradeData.count : 0,
+        });
+      });
+
+      if (queueList.length === 0)
+        return alert("error in queueList length is 0");
+
+      let dataSetsQueue = queueConfig.data.datasets;
+      let dataSetsPrice = priceConfig.data.datasets;
+      let dataSetsVolume = volumeConfig.data.datasets;
+
+      // let priceCache = [];
+      let lastPrice = 0;
+      queueList.forEach((q) => {
+        queueConfig.data.labels.push(q.time);
+        dataSetsQueue[0].data.push(q.volumeBuy);
+        dataSetsQueue[1].data.push(q.volumeSell);
+
+        // priceCache.push(q.priceBuy);
+        // sumPriceCache = priceCache.reduce((a, b) => a + b, 0);
+
+        // if (sumPriceCache / 10 !== q.priceBuy) {
+        // if (lastPrice !== q.priceBuy) {
+        priceConfig.data.labels.push(q.time);
+        dataSetsPrice[0].data.push(q.priceBuy);
+        // }
+        // lastPrice = q.priceBuy;
+
+        // if (q.volumeTrade > 0) {
+        volumeConfig.data.labels.push(q.time);
+        dataSetsVolume[0].data.push(q.volumeTrade);
+        dataSetsVolume[1].data.push(q.countTrade);
+        // }
+      });
+
+      queueChart.update();
+      volumeChart.update();
+      priceChart.update();
+    },
+  });
+</script>

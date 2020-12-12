@@ -1,0 +1,233 @@
+<div style="padding: 10px; margin: 0;">
+  <div id="chart"></div>
+</div>
+
+<script src="https://unpkg.com/jalali-moment/dist/jalali-moment.browser.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.fusioncharts.com/fusioncharts/latest/fusioncharts.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.fusioncharts.com/fusioncharts/latest/themes/fusioncharts.theme.fusion.js"
+></script>
+
+<script type="text/javascript">
+  const getUrlParams = () => {
+    const url = window.location.href;
+    let params = {};
+    (url + "?")
+      .split("?")[1]
+      .split("&")
+      .forEach(function (pair) {
+        pair = (pair + "=").split("=").map(decodeURIComponent);
+        if (pair[0].length) {
+          params[pair[0]] = pair[1];
+        }
+      });
+
+    return params;
+  };
+
+  const fixTime = (time) => {
+    const first = parseInt(time.charAt(0));
+
+    let hour = "00";
+    let minute = "00";
+    let second = "00";
+
+    if (first >= 8 && first <= 9) {
+      hour = ("0" + first).slice(-2);
+      minute = time.substring(1, 3);
+      second = time.substring(3, 5);
+    } else {
+      hour = time.substring(0, 2);
+      minute = time.substring(2, 4);
+      second = time.substring(4, 6);
+    }
+
+    return `${hour}:${minute}:${second}`;
+  };
+
+  const schema = [
+    {
+      name: "زمان",
+      type: "date",
+      format: "%H:%M:%S",
+    },
+    {
+      name: "حجم صف خرید",
+      type: "number",
+    },
+    {
+      name: "حجم صف فروش",
+      type: "number",
+    },
+    {
+      name: "حجم معاملات",
+      type: "number",
+    },
+    {
+      name: "قیمت خرید",
+      type: "number",
+    },
+  ];
+
+  const dataStore = new FusionCharts.DataStore();
+  const dataSource = {
+    chart: {},
+    caption: {
+      text: "صف و حجم معاملات",
+    },
+    yaxis: [
+      {
+        plot: [
+          {
+            value: "حجم صف خرید",
+            type: "line",
+          },
+          {
+            value: "حجم صف فروش",
+            type: "line",
+          },
+        ],
+        title: "حجم صف",
+        // format: {
+        //   prefix: "$",
+        //   suffix: "%",
+        // },
+      },
+      {
+        plot: {
+          value: "حجم معاملات",
+          type: "column",
+        },
+        title: "حجم معاملات",
+      },
+      {
+        plot: {
+          value: "قیمت خرید",
+          type: "line",
+        },
+        title: "قیمت خرید",
+        format: {
+          prefix: " Rial",
+        },
+      },
+    ],
+  };
+
+  const id = getUrlParams().id || "1234";
+  const date = getUrlParams().date || "2020-06-09";
+  const byCDN = getUrlParams().cdn ? getUrlParams().cdn === "1" : false;
+
+  $.ajax({
+    url: `http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i=${id}&d=${date.replace(
+      /-/g,
+      ""
+    )}`,
+    success: function (res) {
+      /**
+       * Trade
+       */
+      const intraTradeData = res.match(/var IntraTradeData=\[\[(.*?)\]\];/m);
+      if (!intraTradeData) return alert("dont get IntraTradeData");
+
+      const intraSplit = intraTradeData[1].split("],[");
+      if (!intraSplit) return alert("error in intraSplit");
+
+      let tradeList = {};
+      intraSplit.forEach((intra) => {
+        const int = intra.split(",");
+
+        const time = int[1].replace(/'/g, "");
+        const volume = parseInt(int[2].replace(/'/g, ""), 10);
+
+        if (!tradeList[time]) tradeList[time] = { volume: 0, count: 0 };
+        tradeList[time] = {
+          volume: tradeList[time].volume + volume,
+          count: tradeList[time].count + 1,
+        };
+      });
+      if (Object.keys(tradeList).length === 0)
+        return alert("error in tradeList length is 0");
+
+      /**
+       * Queue
+       */
+      const bestLimitData = res.match(/var BestLimitData=\[(.*?)\];/m);
+      if ((bestLimitData && !bestLimitData[1]) || !bestLimitData)
+        return alert("dont get bestLimitData");
+
+      let queueList = [];
+
+      bestLimitData[1].split("],").forEach((it) => {
+        const d = it.split(",");
+        if (d.length === 0) return;
+        if (!d[1]) return;
+        const pos = parseInt(d[1].replace(/'/g, ""));
+        if (pos !== 1) return;
+
+        const time = d[0].replace("[", "");
+        const timeFixed = fixTime(time);
+
+        if (queueList.find((q) => q.time === timeFixed)) return;
+
+        const timeMoment = moment(timeFixed, "HH:mm:ss");
+
+        if (
+          !timeMoment.isBetween(
+            moment("08:29:00", "HH:mm:ss"),
+            moment("12:31:00", "HH:mm:ss")
+          )
+        )
+          return;
+
+        const tradeData = tradeList[timeFixed];
+
+        queueList.push({
+          time: timeFixed,
+
+          noBuy: parseInt(d[2].replace(/'/g, "")),
+          volumeBuy: parseInt(d[3].replace(/'/g, "")),
+          priceBuy: parseInt(d[4].replace(/'/g, "")),
+          priceSell: parseInt(d[5].replace(/'/g, "")),
+          volumeSell: parseInt(d[6].replace(/'/g, "")),
+          noSell: parseInt(d[7].replace(/'/g, "")),
+
+          volumeTrade: tradeData ? tradeData.volume : 0,
+          countTrade: tradeData ? tradeData.count : 0,
+        });
+      });
+
+      if (queueList.length === 0)
+        return alert("error in queueList length is 0");
+
+      let data = [];
+      queueList.forEach((q) => {
+        data.push([
+          q.time,
+          q.volumeBuy,
+          q.volumeSell,
+          q.volumeTrade,
+          q.priceBuy,
+        ]);
+      });
+
+      dataSource.data = dataStore.createDataTable(data, schema);
+
+      new FusionCharts({
+        type: "timeseries",
+        renderAt: "chart",
+        width: "100%",
+        height: "600",
+        dataSource: dataSource,
+      }).render();
+    },
+  });
+</script>

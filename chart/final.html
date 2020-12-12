@@ -1,0 +1,125 @@
+<div style="padding: 10px; margin: 0;">
+  <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+<script type="text/javascript">
+  let config = {
+    // The type of chart we want to create
+    type: "line",
+
+    // The data for our dataset
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "قیمت پایانی",
+          borderColor: "rgb(75, 192, 192)",
+          data: [],
+        },
+        {
+          label: "آخرین قیمت",
+          borderColor: "rgb(255, 99, 132)",
+          data: [],
+        },
+      ],
+    },
+
+    // Configuration options go here
+    options: {
+      elements: {
+        line: {
+          tension: 0,
+          fill: false,
+        },
+      },
+    },
+  };
+
+  const ctx = document.getElementById("myChart").getContext("2d");
+  const chart = new Chart(ctx, config);
+
+  const getUrlParams = () => {
+    const url = window.location.href;
+    let params = {};
+    (url + "?")
+      .split("?")[1]
+      .split("&")
+      .forEach(function (pair) {
+        pair = (pair + "=").split("=").map(decodeURIComponent);
+        if (pair[0].length) {
+          params[pair[0]] = pair[1];
+        }
+      });
+
+    return params;
+  };
+
+  const xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      const virgol = this.responseText.split(";");
+      const virSplit = virgol[0].split(",");
+
+      const lastTradePrice = virSplit && virSplit[2] ? virSplit[2].trim() : 0;
+      const finalPrice =
+        virSplit && virSplit[3] ? parseInt(virSplit[3].trim(), 10) : 0;
+
+      const date = new Date();
+      const time =
+        date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+
+      let dataSets = config.data.datasets;
+
+      let dataSetsFinalPrice =
+        dataSets[0].data.length > 0
+          ? dataSets[0].data[dataSets[0].data.length - 1]
+          : 0;
+
+      let dataSetsLastTradePrice =
+        dataSets[1].data.length > 0
+          ? dataSets[1].data[dataSets[1].data.length - 1]
+          : 0;
+
+      if (lastTradePrice) {
+        dataSetsFinalPrice = finalPrice;
+        dataSetsLastTradePrice = lastTradePrice;
+      }
+
+      config.data.labels.push(time);
+      dataSets[0].data.push(dataSetsFinalPrice);
+      dataSets[1].data.push(dataSetsLastTradePrice);
+      chart.update();
+    }
+  };
+
+  const id = getUrlParams().id || "1234";
+
+  setInterval(() => {
+    xhttp.open(
+      "GET",
+      `http://www.tsetmc.com/tsev2/data/instinfofast.aspx?i=${id}&c=44+`,
+      true
+    );
+
+    xhttp.setRequestHeader("Accept-Encoding", "gzip, deflate");
+    xhttp.setRequestHeader("Accept-Language", "en-US,en;q=0.9,fa;q=0.8");
+    xhttp.setRequestHeader(
+      "User-Agent",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
+    );
+    xhttp.setRequestHeader("Accept", '"text/plain, */*; q=0.01"');
+    xhttp.setRequestHeader(
+      "Referer",
+      `http://www.tsetmc.com/Loader.aspx?ParTree=151311&i=${id}`
+    );
+    xhttp.setRequestHeader("X-Requested-With", "XMLHttpRequest"),
+      xhttp.setRequestHeader("referrerPolicy", "no-referrer-when-downgrade");
+    xhttp.setRequestHeader("body", "");
+    xhttp.setRequestHeader("method", "GET");
+    xhttp.setRequestHeader("mode", "cors");
+
+    xhttp.send();
+  }, 5 * 1000);
+</script>

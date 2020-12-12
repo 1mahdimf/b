@@ -1,0 +1,84 @@
+<div id="chart"></div>
+
+<script
+  type="text/javascript"
+  src="https://cdn.fusioncharts.com/fusioncharts/latest/fusioncharts.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.fusioncharts.com/fusioncharts/latest/themes/fusioncharts.theme.fusion.js"
+></script>
+
+<script type="text/javascript">
+  const data = [
+    ["1/1/2018 0:00:00", 1044, 5600168, 6600168],
+    ["1/1/2018 0:02:52", 975, 1388475, 4388475],
+    ["1/1/2018 0:05:45", 1020, 686520, 6865620],
+    ["1/1/2018 0:08:38", 1048, 1482296, 4482296],
+    ["1/1/2018 0:11:31", 1689, 115740, 16315740],
+    ["1/1/2018 0:14:24", 1291, 12909895, 12709895],
+    ["1/1/2018 0:17:16", 1747, 11473179, 15473179],
+  ];
+  const schema = [
+    {
+      name: "Time",
+      type: "date",
+      format: "%-m/%-d/%Y %H:%M:%S",
+    },
+    {
+      name: "Units Sold",
+      type: "number",
+    },
+    {
+      name: "Sale Amount",
+      type: "number",
+    },
+    {
+      name: "Sale Amount2",
+      type: "number",
+    },
+  ];
+
+  const dataStore = new FusionCharts.DataStore();
+  const dataSource = {
+    chart: {},
+    caption: {
+      text: "Sales Performance",
+    },
+    yaxis: [
+      {
+        plot: [
+          {
+            value: "Sale Amount",
+            type: "line",
+          },
+          {
+            value: "Sale Amount2",
+            type: "line",
+          },
+        ],
+        title: "Sale Amount",
+        format: {
+          prefix: "$",
+          suffix: "%",
+        },
+      },
+      {
+        plot: {
+          value: "Units Sold",
+          type: "column",
+        },
+        title: "Units Sold",
+      },
+    ],
+  };
+  dataSource.data = dataStore.createDataTable(data, schema);
+
+  new FusionCharts({
+    type: "timeseries",
+    renderAt: "chart",
+    width: "100%",
+    height: "600",
+    dataSource: dataSource,
+  }).render();
+</script>
