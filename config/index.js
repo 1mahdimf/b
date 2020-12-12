@@ -8,10 +8,10 @@ module.exports = {
   botToken: "1133578876:AAEMD8VEhCyXNbhDPvycGswKFZeYEMeXjko",
   alertBotToken: "1207522997:AAF7UJbvphcxUQ8CsmYFNTMKf3XN35gFUds",
   nazerBotToken: "1164111864:AAEHJYz3n2YmkbZ-wQ82cqZ9wWNv0l94Lrc",
-  botAdminIds: [114463063],
+  botAdminIds: [114463063, 757721911],
   botUseProxy: true,
   botProxyHost: "127.0.0.1",
-  botProxyPort: 1080,
+  botProxyPort: 9050, //1080,
   botNotificationUserIds: [
     114463063,
     757721911,
@@ -25,6 +25,7 @@ module.exports = {
     237412164,
     395317922,
     108232662,
+    197771944,
   ],
   botNotificationUserName: {
     114463063: "جواد",
@@ -39,6 +40,7 @@ module.exports = {
     237412164: "رضا حبیب تمر",
     395317922: "علمیه",
     108232662: "سینا جدیدی",
+    197771944: "بابا",
   },
   botNazerUserIds: [
     114463063,
@@ -53,6 +55,7 @@ module.exports = {
     237412164, // Reza Habibtamar
     395317922,
     108232662,
+    197771944,
   ],
 
   startTime: "08:29:40",

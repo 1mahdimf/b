@@ -26,10 +26,10 @@ class OnlineplusApi {
 
     this.broker = broker;
     if (broker === "mofid") {
-      this.brokerDomain = "https://onlineplus.mofidonline.com";
+      this.brokerDomain = "https://api2.mofidonline.com";
       this.authority = "onlineplus.mofidonline.com";
     } else if (broker === "mobin") {
-      this.brokerDomain = "https://silver.mobinsb.com";
+      this.brokerDomain = "https://api2.mobinsb.com";
       this.authority = "silver.mobinsb.com";
     } else if (broker === "moshaveransaham") {
       this.brokerDomain = "https://silver.onlinesahm.com";
@@ -66,8 +66,8 @@ class OnlineplusApi {
     this.headers = {
       "user-agent":
         "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36",
-      origin: this.brokerDomain,
-      referer: `${this.brokerDomain}/Home/Default/page-1`,
+      origin: `https://${this.authority}`,
+      referer: `https://${this.authority}/Home/Default/page-1`,
       authority: this.authority,
       "sec-fetch-dest": "empty",
       "x-requested-with": "XMLHttpRequest",
@@ -155,7 +155,7 @@ class OnlineplusApi {
   getRemainPriceApi() {
     return new Promise((resolve, reject) => {
       const options = {
-        url: `${this.brokerDomain}/Handlers/GetAccountRemain.ashx`,
+        url: `${this.brokerDomain}/Web/V1/Accounting/Remain`,
         method: "GET",
         headers: this.headers,
         timeout: 10000, // ms
