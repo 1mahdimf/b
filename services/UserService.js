@@ -252,7 +252,7 @@ class UserService {
 
   static async getUserOpenOrder(userId) {
     try {
-      const { requestApi } = await this.connectBrokerByUser(userId);
+      const { requestApi, user } = await this.connectBrokerByUser(userId);
 
       let result = [];
       const details = await requestApi.getOrderListApi();
@@ -261,13 +261,15 @@ class UserService {
         details.forEach((detail) => {
           if (detail.statusType === "done") {
             result.push(
-              `📈 ${detail.side === "buy" ? "خرید" : "فروش"} ${
-                detail.isinName
-              }\n💰 ${currency(detail.price)}\n🧮 تعداد: ${digit(
-                detail.qunatity
-              )}\n🥇 جایگاه: ${digit(detail.position)}\n🎖 جایگاه حجمی: ${digit(
+              `👨🏻 ${user.name} [${user.broker}]\n📈 ${
+                detail.side === "buy" ? "خرید" : "فروش"
+              } ${detail.isinName}\n💰 ${currency(
+                detail.price
+              )}\n🧮 تعداد: ${digit(detail.qunatity)}\n🥇 جایگاه: ${digit(
+                detail.position
+              )}\n🎖 جایگاه حجمی: ${digit(
                 detail.volumetricPosition
-              )}\n🔎 وضعیت: ${detail.status}\n⌚️ زمان: ${moment(
+              )}\n🔎 وضعیت: ${detail.status}\n⌚ زمان: ${moment(
                 detail.createdAt
               ).format("HH:mm:ss")}\n/cancel_order_${userId}_${detail.orderId}`
             );
@@ -299,7 +301,7 @@ class UserService {
               detail.qunatity
             )}\n🥇 جایگاه: ${digit(detail.position)}\n🎖 جایگاه حجمی: ${digit(
               detail.volumetricPosition
-            )}\n🔎 وضعیت: ${detail.status}\n⌚️ زمان: ${moment(
+            )}\n🔎 وضعیت: ${detail.status}\n⌚ زمان: ${moment(
               detail.createdAt
             ).format("HH:mm:ss")}`
           );
@@ -360,7 +362,7 @@ class UserService {
         credit.accountBalance
       )}${
         credit.blockedBalance > 0
-          ? `\n⛔️ بلوکه شده: ${currency(credit.blockedBalance)}`
+          ? `\n⛔ بلوکه شده: ${currency(credit.blockedBalance)}`
           : ""
       }`;
     } catch (e) {
@@ -407,14 +409,14 @@ class UserService {
               user.broker
             }]\n💰 موجودی: ${currency(credit.accountBalance)}\n${
               credit.blockedBalance > 0
-                ? `⛔️ بلوکه شده: ${currency(credit.blockedBalance)}\n`
+                ? `⛔ بلوکه شده: ${currency(credit.blockedBalance)}\n`
                 : ""
             }/order_add_${user.id}`,
           });
         } catch (err) {
           result.push({
             credit: 0,
-            text: `👨🏻 ${user.name} [${user.broker}]\n❗️ خطا در گرفتن موجودی`,
+            text: `👨🏻 ${user.name} [${user.broker}]\n❗ خطا در گرفتن موجودی`,
           });
         }
       }
@@ -441,7 +443,7 @@ class UserService {
 
         try {
           if (!user.username || !user.password) {
-            message = `👨🏻 ${user.name} [${user.broker}]\n❗️ نام کاربری یا کلمه عبور برای این حساب ثبت نشده است`;
+            message = `👨🏻 ${user.name} [${user.broker}]\n❗ نام کاربری یا کلمه عبور برای این حساب ثبت نشده است`;
             result.push(message);
             if (reply) reply(message);
             continue;
@@ -451,7 +453,7 @@ class UserService {
 
           const cookies = await requestApi.login(user.username, user.password);
           if ((cookies && cookies.length === 0) || !cookies) {
-            message = `👨🏻 ${user.name} [${user.broker}]\n❗️توکن کاربر دریافت نشد`;
+            message = `👨🏻 ${user.name} [${user.broker}]\n❗توکن کاربر دریافت نشد`;
             result.push(message);
             if (reply) reply(message);
             await delay(10000);
@@ -470,7 +472,7 @@ class UserService {
           let error = err ? JSON.stringify(err) : "خطای نامشخص";
           if (isString(err)) error = err;
 
-          message = `👨🏻 ${user.name} [${user.broker}]\n❗️ ${error}`;
+          message = `👨🏻 ${user.name} [${user.broker}]\n❗ ${error}`;
           result.push();
           if (reply) reply(message);
         }

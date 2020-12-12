@@ -371,7 +371,7 @@ class BotService {
           order.price
         )}\n🧮 تعداد سهم: ${digit(order.quantity) || "کل موجودی"}\n💻 سرور: ${
           order.server
-        }\n⌚️ ${order.startTime} - ${order.endTime} - ${
+        }\n⌚ ${order.startTime} - ${order.endTime} - ${
           order.delay
         } ms\nوضعیت: ${order.status}`;
       });
@@ -629,6 +629,43 @@ class BotService {
     return false;
   }
 
+  async getGroupOpenOrder() {
+    if (this.text === "/group_open_order") {
+      try {
+        const userIds = this.session.newOrder.userIds;
+
+        let list = [];
+        for (let i = 0; i < userIds.length; i++) {
+          const userId = userIds[i];
+
+          try {
+            const result = await UserService.getUserOpenOrder(userId);
+            this.reply(result.join("\n\n===========================\n\n"), {
+              reply_markup: {
+                remove_keyboard: true,
+              },
+            });
+          } catch (e) {
+            this.reply(e, {
+              reply_markup: {
+                remove_keyboard: true,
+              },
+            });
+          }
+        }
+      } catch (e) {
+        this.reply(e, {
+          reply_markup: {
+            remove_keyboard: true,
+          },
+        });
+      }
+
+      return true;
+    }
+    return false;
+  }
+
   async cancelOrder() {
     const match = this.text.match(/^\/cancel_order_(\d+)_(\w+)$/i);
     if (match) {
@@ -757,9 +794,9 @@ class BotService {
         order.isinName
       }\n💰 قیمت: ${currency(order.price)}\n🧮 تعداد سهم: ${
         digit(order.quantity) || "کل موجودی"
-      }\n💻 سرور: ${order.server}\n⌚️ ${order.startTime} - ${
-        order.endTime
-      } - ${order.delay} ms\n🗑 /order_delete_${order.id}\n💴 /credit_user_${
+      }\n💻 سرور: ${order.server}\n⌚ ${order.startTime} - ${order.endTime} - ${
+        order.delay
+      } ms\n🗑 /order_delete_${order.id}\n💴 /credit_user_${
         order.user.id
       }\n🔐 /login_user_${order.user.id}\n🧨 /run_order_${order.id}`;
     });
@@ -773,6 +810,20 @@ class BotService {
     if (this.text === "/order_list") {
       const { list, options } = await this.getOrderListData();
       this.reply(list, options);
+      return true;
+    }
+    return false;
+  }
+
+  async deleteOrderList() {
+    if (this.text === "/order_list_delete") {
+      let orderNewList = await OrderService.listByStatus("new");
+
+      for (let i = 0; i < orderNewList.length; i++) {
+        await OrderService.delete(orderNewList[i].id);
+      }
+
+      this.reply("همه حذف شدند", { reply_markup: { remove_keyboard: true } });
       return true;
     }
     return false;
@@ -1015,7 +1066,7 @@ class BotService {
           this.reply(
             `${list.join(
               "\n\n===========================\n\n"
-            )}\n\n===========================\n\n/group_login\n\n/group_order\n/group_fast_order\n/group_credit\n/group_portfolio${
+            )}\n\n===========================\n\n/group_login\n\n/group_order\n/group_fast_order\n/group_credit\n/group_portfolio\n/group_open_order${
               notFoundList.length > 0
                 ? `\n\n🚷 یافت نشده ها\n\n${notFoundList.join("\n")}`
                 : ""
@@ -1404,7 +1455,7 @@ class BotService {
             order.isinName
           }\n💰 قیمت: ${currency(order.price)}\n🧮 تعداد سهم: ${
             digit(order.quantity) || "کل موجودی"
-          }\n💻 سرور: ${order.server}\n⌚️ ${order.startTime} - ${
+          }\n💻 سرور: ${order.server}\n⌚ ${order.startTime} - ${
             order.endTime
           } - ${order.delay} ms\n🗑 /order_delete_${order.id}\n💴 /credit_user_${
             order.user.id
@@ -1467,7 +1518,7 @@ class BotService {
             const orderUpdated = await OrderService.findById(order.id);
 
             this.reply(
-              `〽️ #${orderUpdated.id} - سفارش ${
+              `〽 #${orderUpdated.id} - سفارش ${
                 orderUpdated.side === "buy" ? "خرید" : "فروش"
               } سرعتی\n👨🏻 ${orderUpdated.user.name}\n🆔 ${
                 orderUpdated.user.key
@@ -1491,7 +1542,7 @@ class BotService {
             const orderUpdated = await OrderService.findById(order.id);
 
             this.reply(
-              `〽️ #${orderUpdated.id} - سفارش ${
+              `〽 #${orderUpdated.id} - سفارش ${
                 orderUpdated.side === "buy" ? "خرید" : "فروش"
               } سرعتی\n👨🏻 ${orderUpdated.user.name}\n🆔 ${
                 orderUpdated.user.key
@@ -1499,7 +1550,7 @@ class BotService {
                 orderUpdated.price
               )}\n🧮 تعداد سهم: ${
                 digit(orderUpdated.quantity) || "کل موجودی"
-              }\n\n❗️ ${e.toString()}`
+              }\n\n❗ ${e.toString()}`
             );
           });
 
