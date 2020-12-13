@@ -92,6 +92,9 @@ redisClient.on("connect", async () => {
       // text == /group_credit
       if (await botService.getGroupCredit()) return;
 
+      // text == /group_open_order
+      if (await botService.getGroupOpenOrder()) return;
+
       // text == /group_portfolio
       if (await botService.getGroupPortfolio()) return;
 
@@ -136,6 +139,9 @@ redisClient.on("connect", async () => {
 
       // text == /order_list
       if (await botService.getOrderList()) return;
+
+      // text == /order_list_delete
+      if (await botService.deleteOrderList()) return;
 
       // text == /user_for_order
       if (await botService.getUserForOrderList()) return;
