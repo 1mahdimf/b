@@ -48,21 +48,22 @@ const main = async () => {
     requestApi.isin = foundOrder.isin;
     requestApi.orderType = foundOrder.side;
 
-    const symbolInfo = await TadbirApi.getSybmolInfo(requestApi.isin);
-    const maxPrice = parseInt(symbolInfo.mxp, 10);
+    // const symbolInfo = await TadbirApi.getSybmolInfo(requestApi.isin);
+    // const maxPrice = parseInt(symbolInfo.mxp, 10);
 
     if (foundOrder.price !== 0) {
       requestApi.price = foundOrder.price;
-    } else {
-      if (foundOrder.side === "buy") {
-        requestApi.price = parseInt(symbolInfo.ht, 10);
-      } else {
-        requestApi.price = parseInt(symbolInfo.lt, 10);
-      }
-
-      // update price order by id
-      await MyApi.updateById(foundOrder.id, { price: requestApi.price });
     }
+    // else {
+    //   if (foundOrder.side === "buy") {
+    //     requestApi.price = parseInt(symbolInfo.ht, 10);
+    //   } else {
+    //     requestApi.price = parseInt(symbolInfo.lt, 10);
+    //   }
+
+    //   // update price order by id
+    //   await MyApi.updateById(foundOrder.id, { price: requestApi.price });
+    // }
 
     requestApi.setHeaders(foundOrder.user.token || {});
 
@@ -73,14 +74,14 @@ const main = async () => {
       console.log("credit", credit);
     }
 
-    if (parseInt(foundOrder.quantity, 10) > parseInt(maxPrice, 10)) {
-      requestApi.quantity = parseInt(maxPrice, 10);
+    // if (parseInt(foundOrder.quantity, 10) > parseInt(maxPrice, 10)) {
+    //   requestApi.quantity = parseInt(maxPrice, 10);
 
-      // update quantity order by id
-      await MyApi.updateById(foundOrder.id, { quantity: requestApi.quantity });
-    } else {
-      requestApi.quantity = foundOrder.quantity;
-    }
+    //   // update quantity order by id
+    //   await MyApi.updateById(foundOrder.id, { quantity: requestApi.quantity });
+    // } else {
+    requestApi.quantity = foundOrder.quantity;
+    // }
 
     if (requestApi.quantity === 0 || !requestApi.quantity) {
       if (foundOrder.side === "buy") {
@@ -98,12 +99,12 @@ const main = async () => {
         throw new Error("Quantity is zero");
       }
 
-      if (
-        foundOrder.side === "buy" &&
-        parseInt(requestApi.quantity, 10) > parseInt(maxPrice, 10)
-      ) {
-        requestApi.quantity = parseInt(maxPrice, 10);
-      }
+      // if (
+      //   foundOrder.side === "buy" &&
+      //   parseInt(requestApi.quantity, 10) > parseInt(maxPrice, 10)
+      // ) {
+      //   requestApi.quantity = parseInt(maxPrice, 10);
+      // }
 
       // update quantity order by id
       await MyApi.updateById(foundOrder.id, { quantity: requestApi.quantity });

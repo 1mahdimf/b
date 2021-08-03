@@ -500,6 +500,7 @@ class UserService {
       if ((cookies && cookies.length === 0) || !cookies) {
         throw new Error(`توکن ${user.name} [${user.broker}] دریافت نشد`);
       }
+console.log(cookies);
 
       await this.update(userId, {
         token: { cookie: cookies.join(";") },

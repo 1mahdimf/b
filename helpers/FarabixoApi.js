@@ -450,9 +450,10 @@ class FarabixoApi {
           );
           const tField = tMatch[1];
 
-          const tokenMatch = /<input name="__RequestVerificationToken" type="hidden" value="(.*?)"/i.exec(
-            body
-          );
+          const tokenMatch =
+            /<input name="__RequestVerificationToken" type="hidden" value="(.*?)"/i.exec(
+              body
+            );
           const tokenField = tokenMatch[1];
 
           resolve({ cookie: list.join(";"), tokenField, tField });
@@ -527,11 +528,8 @@ class FarabixoApi {
     return new Promise(async (resolve, reject) => {
       for (let j = 0; j < retryLogin; j++) {
         try {
-          const {
-            cookie,
-            tokenField,
-            tField,
-          } = await this.getCookieBeforeLogin();
+          const { cookie, tokenField, tField } =
+            await this.getCookieBeforeLogin();
 
           let finalCode = null;
           for (let i = 0; i < retryCaptcha; i++) {

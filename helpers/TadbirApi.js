@@ -3,6 +3,8 @@ const config = require("../config");
 
 const { delay } = require("./index");
 
+const data = require("../tadbir.json");
+
 class TadbirApi {
   static getSybmolDetails(isin) {
     return new Promise((resolve, reject) => {
@@ -111,7 +113,7 @@ class TadbirApi {
       const options = {
         url: `https://core.tadbirrlc.com//StocksHandler.ashx?%7B%22Type%22:%22ALL21%22,%22la%22:%22Fa%22%7D&jsoncallback=`,
         headers: {
-          Accept: "application/json, text/plain, */*",
+          Accept: "application/json, text/plain",
           "User-Agent":
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36",
         },
@@ -167,7 +169,9 @@ class TadbirApi {
   static getSybmolDetailsListSearch(query) {
     return new Promise((resolve, reject) => {
       const options = {
-        url: encodeURI(`https://api2.mofidonline.com/Web/V1/Symbol/GetSymbol?term=${query}`),
+        url: encodeURI(
+          `https://api2.mofidonline.com/Web/V1/Symbol/GetSymbol?term=${query}`
+        ),
         headers: {
           Accept: "application/json, text/plain, */*",
           "User-Agent":
@@ -181,20 +185,32 @@ class TadbirApi {
 
           let list = [];
           for (let i = 0; i < data.length; i++) {
-            if(!data[i].isin) continue;
+            if (!data[i].isin) continue;
+            const info = data[i];
 
-            const details = await this.getSybmolDetailsRepeter(data[i].isin);
-            const info = details.symbolinfo;
+            // const details = await this.getSybmolDetailsRepeter(data[i].isin);
+            // const info = details.symbolinfo;
+
+            // list.push({
+            //   insCode: info.ic,
+            //   isin: info.nc,
+            //   name: info.est.trim().replace(/ي/g, "ی"),
+            //   description: info.ect,
+            //   closingPrice: parseInt(info.cp, 10),
+            // });
+            const label = info.label.trim().replace(/ي/g, "ی");
+            const name = label.split("-");
 
             list.push({
-              insCode: info.ic,
-              isin: info.nc,
-              name: info.est.trim().replace(/ي/g, "ی"),
-              description: info.ect,
-              closingPrice: parseInt(info.cp, 10),
+              insCode: null,
+              isin: info.isin,
+              name: name[0],
+              description: null,
+              closingPrice: info.value,
             });
           }
 
+          console.log("list", list);
           resolve(list);
         } else {
           return reject(error);
@@ -222,22 +238,24 @@ class TadbirApi {
 
   static search(query, getDetails = false, limit = 5) {
     return new Promise(async (resolve, reject) => {
+      // console.log(query, getDetails);
       try {
-        let list = [];
-        if (getDetails) {
-          list = await this.getSybmolDetailsList();
-        } else {
-          list = await this.getSymbolList();
-        }
+        // let list = [];
+        // if (getDetails) {
+        //   list = await this.getSybmolDetailsList();
+        // } else {
+        //   list = await this.getSymbolList();
+        // }
+        // console.log("list", list);
 
         let findList = [];
 
-        const regexp = RegExp(`^${query}`);
-        list.forEach((item) => {
-          if (regexp.test(item.name) || regexp.test(item.isin)) {
-            findList.push(item);
-          }
-        });
+        // const regexp = RegExp(`^${query}`);
+        // list.forEach((item) => {
+        //   if (regexp.test(item.name) || regexp.test(item.isin)) {
+        //     findList.push(item);
+        //   }
+        // });
 
         if (findList.length === 0) {
           findList = await this.getSybmolDetailsListSearch(query);
@@ -249,6 +267,7 @@ class TadbirApi {
 
         resolve(findList.slice(0, limit));
       } catch (err) {
+        console.log("tadbir search", err);
         reject(err);
       }
     });
@@ -266,7 +285,7 @@ class TadbirApi {
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36",
         },
       };
-
+      console.log(options.url);
       request(options, (error, res, body) => {
         if (!error && res.statusCode == 200 && body) {
           const data = JSON.parse(body);

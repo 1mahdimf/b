@@ -55,12 +55,13 @@ const main = async () => {
     requestApi.isin = foundOrder.isin;
     requestApi.orderType = foundOrder.side;
 
-    const symbolInfo = await TadbirApi.getSybmolInfo(requestApi.isin);
-    const maxPrice = parseInt(symbolInfo.mxp, 10);
+//    const symbolInfo = await TadbirApi.getSybmolInfo(requestApi.isin);
+//    const maxPrice = parseInt(symbolInfo.mxp, 10);
 
     if (foundOrder.price !== 0) {
       requestApi.price = foundOrder.price;
-    } else {
+    }
+/*  else {
       if (foundOrder.side === "buy") {
         requestApi.price = parseInt(symbolInfo.ht, 10);
       } else {
@@ -70,7 +71,7 @@ const main = async () => {
       // update price order by id
       await MyApi.updateById(foundOrder.id, { price: requestApi.price });
     }
-
+*/
     requestApi.setHeaders(foundOrder.user.token || {});
 
     let credit = {};
@@ -80,15 +81,15 @@ const main = async () => {
       console.log("credit", credit);
     }
 
-    foundOrder.quantity = parseInt(foundOrder.quantity, 10);
+/*    foundOrder.quantity = parseInt(foundOrder.quantity, 10);
     if (foundOrder.quantity > maxPrice) {
       requestApi.quantity = maxPrice;
 
       // update quantity order by id
       await MyApi.updateById(foundOrder.id, { quantity: requestApi.quantity });
-    } else {
+    } else {*/
       requestApi.quantity = foundOrder.quantity;
-    }
+//    }
 
     if (requestApi.quantity === 0 || !requestApi.quantity) {
       if (foundOrder.side === "buy") {
@@ -106,7 +107,7 @@ const main = async () => {
         throw new Error("Quantity is zero");
       }
 
-      if (requestApi.quantity > maxPrice) {
+/*      if (requestApi.quantity > maxPrice) {
         if (foundOrder.side === "buy") {
           requestApi.quantity = maxPrice;
         } else {
@@ -114,7 +115,7 @@ const main = async () => {
             requestApi.quantity / Math.ceil(requestApi.quantity / maxPrice)
           );
         }
-      }
+      }*/
 
       // update quantity order by id
       await MyApi.updateById(foundOrder.id, { quantity: requestApi.quantity });

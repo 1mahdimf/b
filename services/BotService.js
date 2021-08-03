@@ -1221,14 +1221,14 @@ class BotService {
 
       let reply_markup = {};
       if (this.session.searchStock) {
-        const foundStock = this.session.searchStock.find(
-          (stock) => stock.isin === this.session.newOrder.isin
-        );
-        const { priceHigh, priceLow } = calculatePrice(
-          foundStock.closingPrice,
-          5,
-          this.session.newOrder.isin
-        );
+        // const foundStock = this.session.searchStock.find(
+        //   (stock) => stock.isin === this.session.newOrder.isin
+        // );
+        // const { priceHigh, priceLow } = calculatePrice(
+        //   foundStock.closingPrice,
+        //   5,
+        //   this.session.newOrder.isin
+        // );
         // const newPriceHigh = calculatePrice(
         //   priceHigh,
         //   5,
@@ -1240,7 +1240,7 @@ class BotService {
         //   this.session.newOrder.isin
         // );
         reply_markup.keyboard = [
-          [{ text: orderSide === "buy" ? priceHigh : priceLow }],
+          // [{ text: orderSide === "buy" ? priceHigh : priceLow }],
           [{ text: "محاسبه خودکار قیمت سهم" }],
           // [
           //   {
@@ -1673,12 +1673,8 @@ class BotService {
   async getCreditOrder() {
     if (this.text === "/credit_order") {
       try {
-        let {
-          result,
-          sum,
-          orderCount,
-          failedLoginList,
-        } = await OrderService.getCredit();
+        let { result, sum, orderCount, failedLoginList } =
+          await OrderService.getCredit();
 
         if (result.length === 0) {
           this.reply("موردی یافت نشد", {
